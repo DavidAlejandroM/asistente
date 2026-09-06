@@ -3,11 +3,27 @@
 #   docker compose exec ollama ollama pull qwen2.5:7b
 services:
   ollama:
-    image: ollama/ollama:latest
+    # CPU por defecto. Para GPU:
+    #   - AMD (ROCm): imagen ollama/ollama:rocm + los 'devices'/'group_add' de abajo
+    #   - NVIDIA: imagen ollama/ollama:latest + el bloque 'deploy' de abajo
+    image: ollama/ollama:rocm
     ports: ["11434:11434"]
     volumes: ["ollama:/root/.ollama"]
     restart: unless-stopped
-    # Para GPU NVIDIA, descomenta:
+    # --- AMD ROCm ---
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      # GIDs del host para video/render (ajústalos: getent group video render)
+      - "983"
+      - "987"
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      # RX 6700/6700 XT/6750 XT (gfx1031) no está en la lista oficial: hazlo pasar por gfx1030
+      HSA_OVERRIDE_GFX_VERSION: "10.3.0"
+    # --- NVIDIA (en vez de lo de arriba) ---
     # deploy:
     #   resources:
     #     reservations:
