@@ -105,3 +105,12 @@ def test_interact_once_atiende_sin_palabra_de_activacion():
 
     assert brain.seen == ["qué hora es"]
     assert sink.played == [(b"son las tres", 16000)]
+
+
+def test_descarta_el_audio_del_microfono_tras_responder():
+    orch, brain, tts, sink = build([b"WAKE", b"x"])
+
+    orch.run_once()
+
+    # se vació el buffer del micro (evita procesar el eco de la propia voz)
+    assert getattr(orch._source, "drained", 0) >= 1

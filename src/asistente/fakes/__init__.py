@@ -19,6 +19,9 @@ class FakeAudioSource:
     def frames(self) -> Iterator[bytes]:
         yield from self._frames
 
+    def drain(self) -> None:
+        self.drained = getattr(self, "drained", 0) + 1
+
     def close(self) -> None:
         self.closed = True
 

@@ -119,6 +119,7 @@ class Orchestrator:
         """Espera una activación y atiende una petición. False si el audio se agota."""
         frames = self._ensure_frames()
         self._set(state=State.WAITING_WAKE)
+        self._drain_source()   # empieza a escuchar "en limpio"
         self._wakeword.reset()
 
         for frame in frames:
@@ -129,6 +130,8 @@ class Orchestrator:
             return False
 
         self._handle_utterance(frames, play_wake_response=True)
+        self._drain_source()  # descarta lo que el micro captó mientras el asistente hablaba
+        self._wakeword.reset()
         return True
 
     def interact_once(self) -> bool:
@@ -185,6 +188,7 @@ class Orchestrator:
             pcm = _tone(self._sample_rate, [(880, 90), (1175, 120)])
             with self._audio_lock:
                 self._sink.play(pcm, self._sample_rate)
+            self._drain_source()
         except Exception:  # noqa: BLE001
             log.debug("no se pudo reproducir el beep", exc_info=True)
 
@@ -195,3 +199,9 @@ class Orchestrator:
             pcm, sr = self._tts.synthesize(text)
             self._sink.play(pcm, sr)
             self._set(state=prev)
+        self._drain_source()  # no procesar el eco de nuestra propia voz
+
+    def _drain_source(self) -> None:
+        drain = getattr(self._source, "drain", None)
+        if callable(drain):
+            drain()

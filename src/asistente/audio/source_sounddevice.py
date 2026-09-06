@@ -56,6 +56,14 @@ class SoundDeviceSource:
         while True:
             yield self._q.get()
 
+    def drain(self) -> None:
+        """Descarta el audio acumulado (p. ej. mientras el asistente hablaba)."""
+        try:
+            while True:
+                self._q.get_nowait()
+        except queue.Empty:
+            pass
+
     def close(self) -> None:
         try:
             self._stream.stop()

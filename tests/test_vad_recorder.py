@@ -24,7 +24,8 @@ def indices(pcm: bytes) -> list[int]:
 def _rec(**kw):
     defaults = dict(
         sample_rate=16000, frame_ms=20, start_frames=2, silence_ms=60,
-        preroll_ms=40, max_duration_s=1.0, max_wait_s=1.0,
+        preroll_ms=40, max_duration_s=1.0, max_wait_s=1.0, min_utterance_ms=0,
+        min_rms=0.0,
     )
     defaults.update(kw)
     return VadRecorder(**defaults)
@@ -60,6 +61,22 @@ def test_devuelve_vacio_si_nunca_hay_voz():
     pcm = rec.record(frames_from(100))
 
     assert pcm == b""
+
+
+def test_descarta_rafagas_de_ruido_demasiado_cortas():
+    # 3 frames de "voz" (60 ms) rodeados de silencio; min_utterance_ms=200
+    flags = [False, True, True, True, False, False, False, False]
+    rec = _rec(vad=FakeVad(flags), min_utterance_ms=200)
+
+    assert rec.record(frames_from(20)) == b""
+
+
+def test_descarta_locucion_con_nivel_rms_bajo():
+    flags = [False] + [True] * 15 + [False] * 4
+    rec = _rec(vad=FakeVad(flags), min_utterance_ms=0, min_rms=5000.0)
+
+    # frames_from genera niveles moderados (<5000 rms) -> se descarta
+    assert rec.record(frames_from(25)) == b""
 
 
 def test_reframe_trocea_chunks_de_tamano_irregular():
