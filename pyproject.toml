@@ -24,6 +24,9 @@ wakeword = [
     "scipy>=1.11",
     "tqdm>=4",
 ]
+wakeword-vosk = [
+    "vosk>=0.3.45",   # alternativa: la frase la eliges tú, sin entrenar
+]
 admin = [
     "fastapi>=0.110",
     "uvicorn>=0.29",

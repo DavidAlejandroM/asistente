@@ -204,10 +204,22 @@ def _install_audio_providers() -> None:
             framework=s.get("framework", "tflite"),
         )
 
+    def _vosk(s):
+        from asistente.wakeword.vosk_wakeword import VoskWakeWord
+
+        phrases = s.get("phrases") or ([s["phrase"]] if s.get("phrase") else ["hey paco"])
+        return VoskWakeWord(
+            phrases=phrases,
+            model_path=s.get("model_path"),
+            language=s.get("language", "es"),
+            sample_rate=s.get("sample_rate", 16000),
+        )
+
     register_audio_source("sounddevice", _source)
     register_audio_sink("sounddevice", _sink)
     register_recorder("vad", _vad)
     register_wakeword("openwakeword", _oww)
+    register_wakeword("vosk", _vosk)
 
 
 _install_audio_providers()

@@ -3,9 +3,10 @@
 
 # --- lo que dices para activar el asistente ---
 target_phrase:
-  - "oye asistente"
-  - "oye, asistente"
-model_name: "oye_asistente"
+  - "hey paco"
+  - "oye paco"
+  - "ey paco"
+model_name: "hey_paco"
 
 # --- cuántas muestras sintéticas generar (más = mejor, más lento) ---
 n_samples: 30000          # positivas (frases con la palabra clave)
