@@ -1,0 +1,60 @@
+# Copia este archivo a config.yaml y ajústalo.
+# Cada sección elige un "provider" (proveedor intercambiable) + sus parámetros.
+
+wakeword:
+  provider: openwakeword      # openwakeword | fake
+  model: hey_jarvis           # alexa | hey_jarvis | hey_mycroft | ...
+  threshold: 0.5
+  framework: tflite           # tflite (ligero, Pi) | onnx
+
+stt:
+  provider: faster_whisper_http   # faster_whisper_http | fake
+  url: http://192.168.1.50:8001   # PC de escritorio
+  language: es
+
+llm:
+  provider: ollama            # ollama | fake  (más adelante: claude, openai)
+  url: http://192.168.1.50:11434
+  model: qwen2.5:7b
+
+tts:
+  provider: piper_http        # piper_http | fake
+  url: http://192.168.1.50:8002
+  voice: es_ES-sharvard-medium
+
+audio:
+  source: sounddevice         # sounddevice | fake
+  sink: sounddevice
+  recorder: vad               # vad | fake
+  input_device: null          # nombre o índice; null = por defecto
+  output_device: null
+
+location:
+  lat: 6.2819
+  lon: -75.3319
+  name: San Vicente Ferrer, Antioquia
+  timezone: America/Bogota   # o "auto"
+
+admin:
+  enabled: true
+  host: 0.0.0.0
+  port: 8080
+
+# Config por skill. Los secretos van en .env, no aquí.
+skills:
+  home_assistant:
+    url: http://192.168.1.60:8123
+    # token -> variable de entorno HOME_ASSISTANT_TOKEN
+  spotify:
+    device_name: asistente          # nombre del dispositivo librespot en la Pi
+    # client_id/secret/refresh_token -> .env
+
+disabled_skills: []   # p. ej. [get_weather]
+
+system_prompt: >
+  Eres un asistente de voz en español. Responde de forma breve y natural,
+  pensada para escucharse en voz alta. Usa las herramientas cuando la petición
+  lo requiera y no inventes datos que puedas consultar con ellas.
+
+wake_response: ""     # frase corta al activarse, p. ej. "¿sí?" (vacío = solo un pitido)
+sample_rate: 16000

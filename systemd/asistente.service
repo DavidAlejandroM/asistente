@@ -1,0 +1,18 @@
+[Unit]
+Description=Asistente de voz
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# EDITA: usuario y rutas según tu instalación
+User=pi
+WorkingDirectory=/home/pi/asistente
+ExecStart=/home/pi/asistente/.venv/bin/python -m asistente --config /home/pi/asistente/config.yaml
+Restart=always
+RestartSec=3
+# audio del usuario (PipeWire/PulseAudio); 1000 = uid del primer usuario
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# configuración y secretos locales
+config.yaml
+.env
+
+# datos en runtime
+.asistente/
+models/
+
+# artefactos de entrenamiento del wake word
+wakeword_work/
+training/out/
+piper-sample-generator/
+*.tflite
+*.onnx

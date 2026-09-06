@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Asistente · administración</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header>
+  <h1>🎙️ Asistente</h1>
+  <div class="state" id="state">{{ state }}</div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Estado</h2>
+    <p>Última orden: <span id="last_transcript">{{ last_transcript or "—" }}</span></p>
+    <p>Última respuesta: <span id="last_response">{{ last_response or "—" }}</span></p>
+    <p class="err" id="last_error">{{ last_error }}</p>
+    <div class="row">
+      <button onclick="post('/api/test-audio')">Probar altavoz</button>
+      <button class="danger" onclick="post('/api/restart')">Reiniciar servicio</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Skills</h2>
+    <ul class="skills">
+      {% for s in skills %}
+      <li>
+        <label>
+          <input type="checkbox" {% if s.enabled %}checked{% endif %}
+                 onchange="post('/api/skills/{{ s.name }}/toggle')">
+          <b>{{ s.name }}</b> — {{ s.description }}
+        </label>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Temporizadores y alarmas</h2>
+    <ul id="timers">
+      {% for t in timers %}
+      <li data-id="{{ t.id }}">{{ t.kind }} {{ t.label }} — faltan {{ t.seconds_left }} s
+        <button onclick="post('/api/timers/{{ t.id }}/cancel').then(refreshTimers)">cancelar</button>
+      </li>
+      {% endfor %}
+    </ul>
+    <form onsubmit="return addTimer(event)">
+      <input name="seconds" type="number" placeholder="segundos" required>
+      <input name="label" type="text" placeholder="etiqueta">
+      <button>Añadir</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Configuración</h2>
+    <p class="hint">Editar <code>config.yaml</code>. Se valida al guardar; reinicia para aplicar.</p>
+    <form onsubmit="return saveConfig(event)">
+      <textarea id="config_yaml" name="yaml" rows="18" spellcheck="false">{{ config_yaml }}</textarea>
+      <div class="row">
+        <button>Guardar</button>
+        <span id="config_msg"></span>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Logs</h2>
+    <pre id="logs"></pre>
+  </section>
+</main>
+
+<script>
+async function post(url, body) {
+  const opts = {method: 'POST'};
+  if (body) { opts.body = body; }
+  const r = await fetch(url, opts);
+  return r;
+}
+
+async function refreshStatus() {
+  try {
+    const s = await (await fetch('/api/status')).json();
+    document.getElementById('state').textContent = s.state;
+    document.getElementById('last_transcript').textContent = s.last_transcript || '—';
+    document.getElementById('last_response').textContent = s.last_response || '—';
+    document.getElementById('last_error').textContent = s.last_error || '';
+  } catch (e) {}
+}
+
+async function refreshTimers() {
+  const list = await (await fetch('/api/timers')).json();
+  const ul = document.getElementById('timers');
+  ul.innerHTML = '';
+  for (const t of list) {
+    const li = document.createElement('li');
+    li.textContent = `${t.kind} ${t.label} — faltan ${t.seconds_left} s `;
+    const b = document.createElement('button');
+    b.textContent = 'cancelar';
+    b.onclick = () => post(`/api/timers/${t.id}/cancel`).then(refreshTimers);
+    li.appendChild(b);
+    ul.appendChild(li);
+  }
+}
+
+async function addTimer(ev) {
+  ev.preventDefault();
+  const f = new FormData(ev.target);
+  await post('/api/timers', f);
+  ev.target.reset();
+  refreshTimers();
+  return false;
+}
+
+async function saveConfig(ev) {
+  ev.preventDefault();
+  const f = new FormData(ev.target);
+  const r = await fetch('/api/config', {method: 'POST', body: f});
+  const msg = document.getElementById('config_msg');
+  if (r.ok) { msg.textContent = '✓ guardado'; msg.className = ''; }
+  else { const j = await r.json(); msg.textContent = j.detail; msg.className = 'err'; }
+  return false;
+}
+
+const logsEl = document.getElementById('logs');
+try {
+  const es = new EventSource('/api/logs/stream');
+  es.onmessage = (e) => {
+    if (!e.data) return;
+    logsEl.textContent += e.data + '\n';
+    logsEl.scrollTop = logsEl.scrollHeight;
+  };
+} catch (e) {}
+fetch('/api/logs').then(r => r.json()).then(lines => {
+  logsEl.textContent = lines.join('\n') + '\n';
+  logsEl.scrollTop = logsEl.scrollHeight;
+});
+
+setInterval(refreshStatus, 2000);
+setInterval(refreshTimers, 5000);
+</script>
+</body>
+</html>

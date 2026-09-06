@@ -1,0 +1,35 @@
+# Configuración para entrenar una palabra de activación en español con openWakeWord.
+# Se usa desde train_wakeword.py (que a su vez llama a openwakeword.train).
+
+# --- lo que dices para activar el asistente ---
+target_phrase:
+  - "oye asistente"
+  - "oye, asistente"
+model_name: "oye_asistente"
+
+# --- cuántas muestras sintéticas generar (más = mejor, más lento) ---
+n_samples: 30000          # positivas (frases con la palabra clave)
+n_samples_val: 2000
+n_negative_samples: 30000 # negativas (habla sin la palabra clave)
+
+# --- idioma / voces de piper-sample-generator ---
+language: "es"
+tts_batch_size: 50
+
+# --- aumento de datos (ruido y reverberación) ---
+augmentation_rounds: 1
+background_paths:
+  - "./audioset_16k"       # ruido de fondo (AudioSet/FMA, 16 kHz)
+  - "./rirs_16k"           # respuestas de impulso (reverberación)
+
+# --- entrenamiento ---
+steps: 50000
+max_negative_weight: 1500
+target_accuracy: 0.7
+target_recall: 0.5
+output_dir: "./out"
+
+# --- características negativas precalculadas de openWakeWord (HuggingFace) ---
+false_positive_validation_data_path: "validation_set_features.npy"
+feature_data_files:
+  ACAV100M_sample: "openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
