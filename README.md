@@ -36,6 +36,29 @@ cp config.example.yaml config.yaml
 .venv/bin/python -m asistente --fake --once      # un ciclo del pipeline
 ```
 
+## Ejecutar en el PC (sin Raspberry)
+
+Con los servicios levantados (`cd services && docker compose up -d`) y
+`config.yaml` apuntando a `localhost`:
+
+```bash
+# 1. Solo conversar, sin micrófono:
+.venv/bin/python -m asistente --text
+
+# 2. Con micrófono, sin palabra de activación (pulsa Enter para hablar):
+.venv/bin/pip install -e ".[audio,admin]"
+.venv/bin/python -m asistente --ptt
+
+# 3. Con palabra de activación (necesita Python 3.11 para openWakeWord):
+.venv/bin/pip install -e ".[audio,admin,wakeword]"
+.venv/bin/python -m asistente
+```
+
+La UI de administración queda en `http://localhost:8080`.
+En `config.yaml`: `wakeword: {provider: none}` para modo `--ptt`,
+`audio.input_device` con el índice de tu micro (míralo con
+`.venv/bin/python -c "import sounddevice; print(sounddevice.query_devices())"`).
+
 ## Arquitectura
 
 ```
