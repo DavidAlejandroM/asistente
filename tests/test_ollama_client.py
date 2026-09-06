@@ -67,7 +67,7 @@ def test_serializa_historial_con_roles_y_resultados_de_tool():
             content="",
             tool_calls=[ToolCall(id="1", name="luz", arguments={"x": 1})],
         ),
-        Message(role="tool", content="luz encendida", tool_call_id="1"),
+        Message(role="tool", content="luz encendida", tool_call_id="1", name="luz"),
     ]
 
     client.chat(history, [])
@@ -79,6 +79,7 @@ def test_serializa_historial_con_roles_y_resultados_de_tool():
     assert roles == ["user", "assistant", "tool"]
     assert payload["messages"][1]["tool_calls"][0]["function"]["name"] == "luz"
     assert payload["messages"][2]["content"] == "luz encendida"
+    assert payload["messages"][2]["tool_name"] == "luz"  # evita bucles de tool-calling
     assert payload["stream"] is False
 
 

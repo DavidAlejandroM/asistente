@@ -66,6 +66,7 @@ class AppConfig(BaseModel):
         "la petición lo requiera."
     )
     wake_response: str = ""  # frase corta al detectar la palabra de activación (opcional)
+    wake_beep: bool = True    # pitido corto al activarse
     sample_rate: int = 16000
 
     @model_validator(mode="after")

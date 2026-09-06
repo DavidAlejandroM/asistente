@@ -2,8 +2,8 @@
 # Cada sección elige un "provider" (proveedor intercambiable) + sus parámetros.
 
 wakeword:
-  provider: openwakeword      # openwakeword | fake
-  model: hey_jarvis           # alexa | hey_jarvis | hey_mycroft | ...
+  provider: openwakeword      # openwakeword | none (para --ptt) | fake
+  model: hey_jarvis           # alexa | hey_jarvis | hey_mycroft | ... | ruta a un .tflite propio
   threshold: 0.5
   framework: tflite           # tflite (ligero, Pi) | onnx
 
@@ -56,5 +56,6 @@ system_prompt: >
   pensada para escucharse en voz alta. Usa las herramientas cuando la petición
   lo requiera y no inventes datos que puedas consultar con ellas.
 
-wake_response: ""     # frase corta al activarse, p. ej. "¿sí?" (vacío = solo un pitido)
+wake_beep: true       # pitido corto al detectar la palabra de activación
+wake_response: ""     # frase hablada al activarse, p. ej. "¿sí?" (vacío = solo el pitido)
 sample_rate: 16000

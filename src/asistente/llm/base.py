@@ -23,6 +23,7 @@ class Message:
     content: str = ""
     tool_calls: list[ToolCall] = field(default_factory=list)
     tool_call_id: str | None = None  # solo para role == "tool"
+    name: str | None = None  # nombre de la tool (role == "tool")
 
 
 @dataclass

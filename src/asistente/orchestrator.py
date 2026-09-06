@@ -5,8 +5,10 @@ Mantiene un ``Status`` observable para la UI de administración.
 
 from __future__ import annotations
 
+import array
 import enum
 import logging
+import math
 import threading
 import time
 from dataclasses import dataclass, field
@@ -15,6 +17,19 @@ from typing import Iterator
 log = logging.getLogger(__name__)
 
 _NO_ENTENDI = "Perdona, no te he entendido."
+
+
+def _tone(sample_rate: int, segments: list[tuple[float, int]], volume: float = 0.25) -> bytes:
+    """Genera PCM s16le mono con una secuencia de (frecuencia_Hz, duración_ms)."""
+    samples = array.array("h")
+    amp = int(32767 * volume)
+    for freq, ms in segments:
+        n = int(sample_rate * ms / 1000)
+        for i in range(n):
+            # ventana suave para evitar clics
+            env = min(1.0, i / 200, (n - i) / 200)
+            samples.append(int(amp * env * math.sin(2 * math.pi * freq * i / sample_rate)))
+    return samples.tobytes()
 
 
 class State(str, enum.Enum):
@@ -48,6 +63,7 @@ class Orchestrator:
         sink,
         sample_rate: int = 16000,
         wake_response: str = "",
+        wake_beep: bool = True,
         no_understand_message: str = _NO_ENTENDI,
     ) -> None:
         self._source = audio_source
@@ -59,6 +75,7 @@ class Orchestrator:
         self._sink = sink
         self._sample_rate = sample_rate
         self._wake_response = wake_response
+        self._wake_beep = wake_beep
         self._no_understand = no_understand_message
 
         self._status = Status()
@@ -122,8 +139,11 @@ class Orchestrator:
 
     def _handle_utterance(self, frames: Iterator[bytes], *, play_wake_response: bool) -> None:
         try:
-            if play_wake_response and self._wake_response:
-                self._speak(self._wake_response)
+            if play_wake_response:
+                if self._wake_beep:
+                    self._beep()
+                if self._wake_response:
+                    self._speak(self._wake_response)
 
             self._set(state=State.LISTENING)
             audio = self._recorder.record(frames)
@@ -158,6 +178,15 @@ class Orchestrator:
     def announce(self, text: str) -> None:
         """Dice algo de forma proactiva (p. ej. una alarma). Seguro entre hilos."""
         self._speak(text)
+
+    def _beep(self) -> None:
+        """Pitido corto de confirmación (dos tonos ascendentes)."""
+        try:
+            pcm = _tone(self._sample_rate, [(880, 90), (1175, 120)])
+            with self._audio_lock:
+                self._sink.play(pcm, self._sample_rate)
+        except Exception:  # noqa: BLE001
+            log.debug("no se pudo reproducir el beep", exc_info=True)
 
     def _speak(self, text: str) -> None:
         with self._audio_lock:

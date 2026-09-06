@@ -52,9 +52,12 @@ Con los servicios levantados (`cd services && docker compose up -d`) y
 # 3. Con palabra de activación (necesita Python 3.11 para openWakeWord):
 .venv/bin/pip install -e ".[audio,admin,wakeword]"
 .venv/bin/python -m asistente
+
+# 4. Solo la UI (sin micrófono), para editar config y ver logs:
+.venv/bin/python -m asistente --admin-only
 ```
 
-La UI de administración queda en `http://localhost:8080`.
+La UI de administración queda en `http://localhost:8080` (modos `--ptt`, normal y `--admin-only`).
 En `config.yaml`: `wakeword: {provider: none}` para modo `--ptt`,
 `audio.input_device` con el índice de tu micro (míralo con
 `.venv/bin/python -c "import sounddevice; print(sounddevice.query_devices())"`).

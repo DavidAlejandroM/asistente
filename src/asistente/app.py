@@ -61,6 +61,10 @@ def main(argv: list[str] | None = None) -> int:
         help="push-to-talk: pulsa Enter para hablar, sin palabra de activación",
     )
     parser.add_argument("--once", action="store_true", help="una sola interacción")
+    parser.add_argument(
+        "--admin-only", action="store_true",
+        help="solo la UI de administración (sin escuchar el micrófono)",
+    )
     parser.add_argument("--fake", action="store_true", help="proveedores fake")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
@@ -80,14 +84,31 @@ def main(argv: list[str] | None = None) -> int:
         run_text(cfg)
         return 0
 
-    if args.ptt:
-        cfg.wakeword.provider = "none"  # push-to-talk no necesita palabra de activación
+    if args.ptt or args.admin_only:
+        cfg.wakeword.provider = "none"  # no necesita palabra de activación
+    if args.admin_only:
+        cfg.audio.source = "fake"  # no se abre el micrófono
+
+    if not (args.ptt or args.once or args.admin_only) and cfg.wakeword.provider == "none":
+        log.error(
+            "wakeword.provider es 'none' pero el modo normal escucha en bucle. "
+            "Usa --ptt (pulsar Enter para hablar) o configura una palabra de activación."
+        )
+        return 2
 
     orchestrator = build_orchestrator(cfg)
     _maybe_start_admin(cfg, orchestrator, args.config)
 
     try:
-        if args.ptt:
+        if args.admin_only:
+            if not cfg.admin.enabled:
+                log.error("admin.enabled es false en la config; nada que servir")
+                return 1
+            log.info("solo UI de administración. Ctrl-C para salir.")
+            import threading
+
+            threading.Event().wait()
+        elif args.ptt:
             print("Push-to-talk. Pulsa Enter para hablar (Ctrl-C para salir).")
             while True:
                 input()

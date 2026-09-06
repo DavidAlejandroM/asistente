@@ -112,6 +112,7 @@ def build_orchestrator(cfg: AppConfig, brain: Brain | None = None) -> Orchestrat
         sink=_pick(_AUDIO_SINK, "audio_sink", cfg.audio.sink, audio),
         sample_rate=cfg.sample_rate,
         wake_response=cfg.wake_response,
+        wake_beep=cfg.wake_beep,
     )
 
     for skill in brain.skills.enabled_skills():

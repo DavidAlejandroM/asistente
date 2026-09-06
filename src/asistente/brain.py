@@ -58,7 +58,9 @@ class Brain:
             for call in response.tool_calls:
                 result = self._skills.run(call.name, call.arguments)
                 self.history.append(
-                    Message(role="tool", content=result, tool_call_id=call.id)
+                    Message(
+                        role="tool", content=result, tool_call_id=call.id, name=call.name
+                    )
                 )
 
         log.warning("bucle de tools agotado tras %d iteraciones", self._max_tool_iterations)

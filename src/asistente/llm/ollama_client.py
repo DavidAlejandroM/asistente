@@ -65,6 +65,9 @@ def _to_ollama(m: Message) -> dict:
         out["tool_calls"] = [
             {"function": {"name": tc.name, "arguments": tc.arguments}} for tc in m.tool_calls
         ]
+    if m.role == "tool" and m.name:
+        # sin tool_name, qwen2.5/llama a veces repiten la misma llamada en bucle
+        out["tool_name"] = m.name
     return out
 
 

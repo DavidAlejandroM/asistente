@@ -23,6 +23,7 @@ def build(source_frames, *, stt="qué hora es", brain=None, **kw):
     brain = brain or FakeBrain("son las tres")
     tts = FakeTTS(sample_rate=16000)
     sink = FakeAudioSink()
+    kw.setdefault("wake_beep", False)
     orch = Orchestrator(
         audio_source=FakeAudioSource(source_frames),
         wakeword=FakeWakeWord(b"WAKE"),
@@ -83,6 +84,18 @@ def test_run_once_devuelve_false_si_el_audio_se_agota_sin_wake():
 
     assert orch.run_once() is False
     assert brain.seen == []
+
+
+def test_beep_al_detectar_la_palabra_de_activacion():
+    orch, brain, tts, sink = build([b"WAKE", b"x"], wake_beep=True)
+
+    orch.run_once()
+
+    # primero suena el beep (audio corto sin pasar por TTS), luego la respuesta
+    assert len(sink.played) == 2
+    assert sink.played[0][0] != b"son las tres"
+    assert sink.played[1] == (b"son las tres", 16000)
+    assert tts.spoken == ["son las tres"]  # el beep no usa TTS
 
 
 def test_interact_once_atiende_sin_palabra_de_activacion():
