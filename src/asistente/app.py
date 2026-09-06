@@ -55,7 +55,11 @@ def _maybe_start_admin(cfg: AppConfig, orchestrator, cfg_path: Path):
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="asistente")
     parser.add_argument("-c", "--config", default="config.yaml", type=Path)
-    parser.add_argument("--text", action="store_true", help="modo teclado")
+    parser.add_argument("--text", action="store_true", help="modo teclado (sin audio)")
+    parser.add_argument(
+        "--ptt", action="store_true",
+        help="push-to-talk: pulsa Enter para hablar, sin palabra de activación",
+    )
     parser.add_argument("--once", action="store_true", help="una sola interacción")
     parser.add_argument("--fake", action="store_true", help="proveedores fake")
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -76,15 +80,23 @@ def main(argv: list[str] | None = None) -> int:
         run_text(cfg)
         return 0
 
+    if args.ptt:
+        cfg.wakeword.provider = "none"  # push-to-talk no necesita palabra de activación
+
     orchestrator = build_orchestrator(cfg)
     _maybe_start_admin(cfg, orchestrator, args.config)
 
     try:
-        if args.once:
+        if args.ptt:
+            print("Push-to-talk. Pulsa Enter para hablar (Ctrl-C para salir).")
+            while True:
+                input()
+                orchestrator.interact_once()
+        elif args.once:
             orchestrator.run_once()
         else:
             orchestrator.run_forever()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         log.info("interrumpido")
     return 0
 

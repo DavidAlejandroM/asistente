@@ -41,7 +41,20 @@ class OpenWakeWordDetector:
             openwakeword.utils.download_models()
         except Exception:  # noqa: BLE001
             pass
-        return Model(wakeword_models=[model], inference_framework=framework)
+
+        # La firma de Model cambió entre versiones de openWakeWord.
+        for kwargs in (
+            {"wakeword_models": [model], "inference_framework": framework},  # >= 0.5
+            {"wakeword_models": [model]},
+            {"wakeword_model_paths": [model]},                               # 0.4.x
+        ):
+            try:
+                return Model(**kwargs)
+            except TypeError:
+                continue
+        raise RuntimeError(
+            "No se pudo inicializar openWakeWord; revisa la versión instalada."
+        )
 
     def detect(self, frame: bytes) -> bool:
         if self._cooldown > 0:

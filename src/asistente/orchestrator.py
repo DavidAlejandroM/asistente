@@ -111,8 +111,18 @@ class Orchestrator:
             self._set(state=State.IDLE)
             return False
 
+        self._handle_utterance(frames, play_wake_response=True)
+        return True
+
+    def interact_once(self) -> bool:
+        """Atiende una petición SIN palabra de activación (modo push-to-talk)."""
+        frames = self._ensure_frames()
+        self._handle_utterance(frames, play_wake_response=False)
+        return True
+
+    def _handle_utterance(self, frames: Iterator[bytes], *, play_wake_response: bool) -> None:
         try:
-            if self._wake_response:
+            if play_wake_response and self._wake_response:
                 self._speak(self._wake_response)
 
             self._set(state=State.LISTENING)
@@ -125,18 +135,16 @@ class Orchestrator:
             if not transcript:
                 self._speak(self._no_understand)
                 self._set(state=State.IDLE)
-                return True
+                return
 
             response = self._brain.process(transcript)
             self._set(last_response=response)
 
             self._speak(response)
             self._set(state=State.IDLE)
-            return True
         except Exception as exc:  # noqa: BLE001 - no queremos que un fallo tumbe el servicio
             log.exception("error atendiendo la petición")
             self._set(state=State.ERROR, last_error=str(exc))
-            return True
 
     def run_forever(self) -> None:
         self._stop.clear()

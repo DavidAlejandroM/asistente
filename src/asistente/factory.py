@@ -139,6 +139,8 @@ def _install_fakes() -> None:
     register_stt("fake", lambda s: FakeSTT(s.get("transcript", "hola asistente")))
     register_tts("fake", lambda s: FakeTTS())
     register_wakeword("fake", lambda s: FakeWakeWord(b"WAKE"))
+    # "none": nunca se dispara. Para modo push-to-talk (--ptt), sin openWakeWord.
+    register_wakeword("none", lambda s: FakeWakeWord(b"\x00__nunca__\x00"))
     register_recorder("fake", lambda s: FakeRecorder(b"AUDIO"))
     register_audio_source("fake", lambda s: FakeAudioSource([b"WAKE", b"x"]))
     register_audio_sink("fake", lambda s: FakeAudioSink())

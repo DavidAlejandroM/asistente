@@ -14,8 +14,10 @@ dependencies = [
 audio = [
     "sounddevice>=0.4",
     "numpy>=1.26",
-    "openwakeword>=0.6",
     "webrtcvad-wheels>=2.0.14",   # wheels precompilados (incl. ARM)
+]
+wakeword = [
+    "openwakeword>=0.6",          # en la Pi (Python 3.11). En 3.13+ usa --ptt
 ]
 admin = [
     "fastapi>=0.110",

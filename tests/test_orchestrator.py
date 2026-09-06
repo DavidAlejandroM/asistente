@@ -83,3 +83,12 @@ def test_run_once_devuelve_false_si_el_audio_se_agota_sin_wake():
 
     assert orch.run_once() is False
     assert brain.seen == []
+
+
+def test_interact_once_atiende_sin_palabra_de_activacion():
+    orch, brain, tts, sink = build([b"x", b"y"])  # sin WAKE
+
+    orch.interact_once()
+
+    assert brain.seen == ["qué hora es"]
+    assert sink.played == [(b"son las tres", 16000)]
