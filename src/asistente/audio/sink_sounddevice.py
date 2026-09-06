@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from asistente.audio.source_sounddevice import _resolve_device
+
 log = logging.getLogger(__name__)
 
 
@@ -12,7 +14,7 @@ class SoundDeviceSink:
         if sd is None:  # pragma: no cover - requiere hardware
             import sounddevice as sd
         self._sd = sd
-        self._device = device
+        self._device = _resolve_device(device, "output")
 
     def play(self, pcm: bytes, sample_rate: int) -> None:
         import numpy as np

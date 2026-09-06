@@ -49,9 +49,10 @@ Con los servicios levantados (`cd services && docker compose up -d`) y
 .venv/bin/pip install -e ".[audio,admin]"
 .venv/bin/python -m asistente --ptt
 
-# 3. Con palabra de activación (necesita Python 3.11 para openWakeWord):
+# 3. Siempre escuchando, actúa al oír la palabra ("hey jarvis"):
 .venv/bin/pip install -e ".[audio,admin,wakeword]"
-.venv/bin/python -m asistente
+.venv/bin/pip install --no-deps "openwakeword>=0.6.0"   # su dep tflite no tiene wheel en 3.13+
+.venv/bin/python -m asistente                            # wakeword.framework: onnx en el PC
 
 # 4. Solo la UI (sin micrófono), para editar config y ver logs:
 .venv/bin/python -m asistente --admin-only

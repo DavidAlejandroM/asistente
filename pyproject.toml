@@ -17,7 +17,12 @@ audio = [
     "webrtcvad-wheels>=2.0.14",   # wheels precompilados (incl. ARM)
 ]
 wakeword = [
-    "openwakeword>=0.6",          # en la Pi (Python 3.11). En 3.13+ usa --ptt
+    # openWakeWord fija tflite-runtime en Linux y no hay wheel para Python 3.13+.
+    # Instálalo aparte sin deps y usa ONNX:
+    #   pip install --no-deps "openwakeword>=0.6.0"
+    "onnxruntime>=1.17",
+    "scipy>=1.11",
+    "tqdm>=4",
 ]
 admin = [
     "fastapi>=0.110",

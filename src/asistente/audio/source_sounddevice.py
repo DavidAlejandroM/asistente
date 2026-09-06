@@ -3,10 +3,22 @@
 from __future__ import annotations
 
 import logging
+import os
 import queue
 from typing import Iterator
 
 log = logging.getLogger(__name__)
+
+
+def _resolve_device(device, kind: str):
+    """Un nombre de fuente/sumidero de PipeWire/PulseAudio (con puntos) se fija con
+    la variable de entorno correspondiente y se usa el dispositivo 'pulse' de PortAudio.
+    Un índice o nombre ALSA se pasa tal cual.
+    """
+    if isinstance(device, str) and "." in device:
+        os.environ["PULSE_SOURCE" if kind == "input" else "PULSE_SINK"] = device
+        return "pulse"
+    return device
 
 
 class SoundDeviceSource:
@@ -27,7 +39,7 @@ class SoundDeviceSource:
             blocksize=self._blocksize,
             dtype="int16",
             channels=1,
-            device=device,
+            device=_resolve_device(device, "input"),
             callback=self._callback,
         )
         self._started = False
